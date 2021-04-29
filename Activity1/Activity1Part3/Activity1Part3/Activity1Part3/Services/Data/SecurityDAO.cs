@@ -11,22 +11,29 @@ namespace Activity1Part3.Services.Data
     {
         public bool FindByUser(UserModel user)
         {
-            string connectionString = "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=Test;Integrated Security=True;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False";
-            using (SqlConnection connection = new SqlConnection(connectionString))
+            System.Diagnostics.Debug.WriteLine("Username: " + user.Username + " Password: " + user.Password);
+            // Console.WriteLine("Username: " + user.Username + " Password: " + user.Password);
+            string connectionString = @"Data Source=(localdb)\MSSQLLocalDB;Initial Catalog=master;Integrated Security=True;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False";
+            string connectionStringTableSpecific = @"Data Source=(localdb)\MSSQLLocalDB;Initial Catalog=Test;Integrated Security=True;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False";
+            using (SqlConnection connection = new SqlConnection(connectionStringTableSpecific))
             {
-                connection.Open();
+                System.Diagnostics.Debug.WriteLine("Connection: " + connection.ToString());
+               connection.Open();
+                System.Diagnostics.Debug.WriteLine("Conn state: " + connection.State);
                 // Do work here; connection closed on following line.
-                using (SqlCommand command = new SqlCommand("SELECT TOP 1 * FROM Users WHERE USERNAME = " + user.Username + " AND PASSWORD = " + user.Password, connection))
-                // TODO: Fix - SQL Thinks the model props are column names...
-                using (SqlDataReader reader = command.ExecuteReader())
+                using (SqlCommand command = new SqlCommand("SELECT * FROM dbo.Users WHERE USERNAME = @Username AND PASSWORD = @Password", connection))
                 {
-                    // Return successful if any lines exist
-                    while (reader.Read())
+                    // Prepare statement
+                    command.Parameters.AddWithValue("@Username", user.Username);
+                    command.Parameters.AddWithValue("@Password", user.Password);
+                    using (SqlDataReader reader = command.ExecuteReader())
                     {
-                        return true;
+                        System.Diagnostics.Debug.WriteLine("Rows: " + reader.HasRows);
+                        return reader.HasRows;
+                        //return reader.RecordsAffected > 0;
                     }
-                    return false;
                 }
+               
             }
         }
     }
